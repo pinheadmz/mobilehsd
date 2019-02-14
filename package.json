@@ -1,0 +1,26 @@
+{
+  "name": "mobilebcoin",
+  "version": "1.0.0",
+  "description": "bcoin full node in a mobile browser",
+  "main": "index.html",
+  "dependencies": {
+    "bval": "^0.1.5",
+    "bfile": "^0.1.4",
+    "bweb": "^0.1.7"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pinheadmz/mobilebcoin.git"
+  },
+  "author": "Matthew Zipkin",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/pinheadmz/mobilebcoin/issues"
+  },
+  "homepage": "https://github.com/pinheadmz/mobilebcoin#readme"
+}

@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+
+    <title>bcoin Full Node</title>
+  </head>
+  <body>
+    <h4>bcoin Full Node</h4>
+    <ul class="nav nav-tabs" id="mainTabs" role="tablist">
+      <li class="nav-item">
+        <a class="nav-link active" id="log-tab" data-toggle="tab" href="#log" role="tab" aria-controls="log" aria-selected="true">Log</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" id="node-tab" data-toggle="tab" href="#node" role="tab" aria-controls="node" aria-selected="false" onclick="getInfo()">Node</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" id="peers-tab" data-toggle="tab" href="#peers" role="tab" aria-controls="peers" aria-selected="false" onclick="getPeers()">Peers</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" id="wallet-tab" data-toggle="tab" href="#wallet" role="tab" aria-controls="wallet" aria-selected="false" onclick="getWallet()">Wallet</a>
+      </li>
+    </ul>
+    <div class="tab-content" id="myTabContent">
+      <div class="tab-pane fade show active" id="log" role="tabpanel" aria-labelledby="home-tab"></div>
+      <div class="tab-pane fade" id="node" role="tabpanel" aria-labelledby="profile-tab" style="white-space: pre"></div>
+      <div class="tab-pane fade" id="peers" role="tabpanel" aria-labelledby="profile-tab" style="white-space: pre"></div>
+      <div class="tab-pane fade" id="wallet" role="tabpanel" aria-labelledby="contact-tab"></div>
+    </div>
+
+
+
+    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
+
+
+    <script type="text/javascript" src="bcoin.js"></script>
+    <script type="text/javascript" src="proxysocket.js"></script>
+    <script type="text/javascript" src="logger.js"></script>
+    <script type="text/javascript" src="format.js"></script>
+    <script type="text/javascript">
+
+const log = document.getElementById('log');
+
+const logger = new LOGGER({
+  level: 'info',
+  console: true
+});
+
+logger.writeConsole = function writeConsole(level, module, args) {
+  const line = document.createElement('div');
+  line.innerHTML = '[' + module + '] ' + FORMAT(args, true);
+  log.appendChild(line);
+  if (log.childElementCount > 6)
+    log.firstElementChild.remove();
+};
+
+const node = new BCOIN.FullNode({
+  hash: true,
+  query: true,
+  prune: true,
+  network: 'main',
+  memory: false,
+  coinCache: 30,
+  logConsole: true,
+  workers: true,
+  checkpoints: true,
+  createSocket: (port, host) => {
+    return PROXYSOCKET.connect(`wss://browser.c4yt.io`, port, host);
+  },
+  logger: logger,
+  plugins: [BCOIN.wallet.plugin]
+});
+
+const {wdb} = node.require('walletdb');
+wdb.options.witness = true;
+
+function getInfo() {
+  const totalTX = node.mempool ? node.mempool.map.size : 0;
+  const size = node.mempool ? node.mempool.getSize() : 0;
+
+  let addr = node.pool.hosts.getLocal();
+  if (!addr)
+    addr = node.pool.hosts.address;
+
+  const info =
+  {
+    network: node.network.type,
+    chain: {
+      height: node.chain.height,
+      tip: node.chain.tip.rhash(),
+      progress: node.chain.getProgress()
+    },
+    pool: {
+      host: addr.host,
+      port: addr.port,
+      agent: node.pool.options.agent,
+      services: node.pool.options.services.toString(2),
+      outbound: node.pool.peers.outbound,
+      inbound: node.pool.peers.inbound
+    },
+    mempool: {
+      tx: totalTX,
+      size: size
+    }
+  };
+
+  const nodeTab = document.getElementById('node');
+  nodeTab.innerHTML = JSON.stringify(info, null, 2);
+}
+
+function getPeers() {
+  const peers = [];
+
+  for (let peer = node.pool.peers.head(); peer; peer = peer.next) {
+    peer.getName();
+
+    peers.push({
+      addr: peer.hostname(),
+      subver: peer.agent,
+      bytessent: peer.socket.bytesWritten,
+      bytesrecv: peer.socket.bytesRead
+    });
+  }
+
+  const peersTab = document.getElementById('peers');
+  peersTab.innerHTML = JSON.stringify(peers, null, 2);
+}
+
+async function getWallet() {
+  const wallet = wdb.primary;
+  const {key, mnemonic} = wallet.master.toJSON(node.network, true);
+  const account = await wallet.getAccount('default');
+  const receive = account.receiveAddress();
+  const nested = account.nestedAddress();
+  const raddr = receive.toString(node.network);
+  const naddr = nested ? nested.toString(node.network) : null;
+
+  let html = '';
+
+  html += `Current Address: <br><b>${raddr}</b><br><br>`;
+
+  // html += `Extended Private Key: <b>${key.xprivkey}</b><br>`;
+  // html += `Mnemonic: <b>${mnemonic.phrase}</b><br>`;
+
+  const balance = await wallet.getBalance();
+
+  html += `Confirmed Balance: <b>${balance.confirmed}</b><br>`;
+  html += `Unconfirmed Balance: <b>${balance.unconfirmed}</b><br>`;
+
+  const txs = await wallet.getHistory();
+  const det = await wallet.toDetails(txs);
+
+  // html += 'TXs:\n';
+  // wdiv.innerHTML = html;
+
+  // for (const tx of det) {
+  //   const hash = util.revHex(tx.hash);
+  //   const el = create(
+  //     `<a style="display:block;" href="#${hash}">${hash}</a>`);
+  //   wdiv.appendChild(el);
+  //   setMouseup(el, tx.toJSON());
+
+  const walletTab = document.getElementById('wallet');
+  walletTab.innerHTML = html;
+}
+
+(async () => {
+  await node.open();
+  await node.connect();
+  node.startSync();
+
+  node.on('connect', () => {getInfo()});
+
+  node.pool.on('peer connect', () => {getPeers()});
+  node.pool.on('peer close', () => {getPeers()});
+  node.pool.on('peer open', () => {getPeers()});
+  node.pool.on('packet', () => {getPeers()});
+
+})().catch((err) => {
+  throw err;
+});
+
+    </script>
+  </body>
+</html>
