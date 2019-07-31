@@ -5,10 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
 
-    <title>bcoin Full Node</title>
+    <title>hsd SPV Node</title>
   </head>
   <body>
-    <h4>bcoin Full Node</h4>
+    <h4>hsd SPV Node</h4>
     <ul class="nav nav-tabs" id="mainTabs" role="tablist">
       <li class="nav-item">
         <a class="nav-link active" id="log-tab" data-toggle="tab" href="#log" role="tab" aria-controls="log" aria-selected="true">Log</a>
@@ -22,25 +22,32 @@
       <li class="nav-item">
         <a class="nav-link" id="wallet-tab" data-toggle="tab" href="#wallet" role="tab" aria-controls="wallet" aria-selected="false" onclick="getWallet()">Wallet</a>
       </li>
+      <li class="nav-item">
+        <a class="nav-link" id="dns-tab" data-toggle="tab" href="#dns" role="tab" aria-controls="dns" aria-selected="false">DNS</a>
+      </li>
     </ul>
     <div class="tab-content" id="myTabContent">
       <div class="tab-pane fade show active" id="log" role="tabpanel" aria-labelledby="home-tab"></div>
-      <div class="tab-pane fade" id="node" role="tabpanel" aria-labelledby="profile-tab" style="white-space: pre"></div>
-      <div class="tab-pane fade" id="peers" role="tabpanel" aria-labelledby="profile-tab" style="white-space: pre"></div>
-      <div class="tab-pane fade" id="wallet" role="tabpanel" aria-labelledby="contact-tab"></div>
+      <div class="tab-pane fade" id="node" role="tabpanel" aria-labelledby="node-tab" style="white-space: pre"></div>
+      <div class="tab-pane fade" id="peers" role="tabpanel" aria-labelledby="peers-tab" style="white-space: pre"></div>
+      <div class="tab-pane fade" id="wallet" role="tabpanel" aria-labelledby="wallet-tab"></div>
+      <div class="tab-pane fade" id="dns" role="tabpanel" aria-labelledby="dns-tab">
+        <br>
+        Name: <input type="text" style="width:400px" id="name" min="0" value="jj_call_home_we_miss_u"><br><br>
+        <button onclick="getDNS()" style="height:50px">Fetch!</button><hr>
+        <span id="answer" style="font-family: monospace; font-size:15px; display: inline-block; width: 100%; white-space: pre">
+      </div>
     </div>
-
-
 
     <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
 
-
-    <script type="text/javascript" src="bcoin.js"></script>
+    <script type="text/javascript" src="hsd.js"></script>
     <script type="text/javascript" src="proxysocket.js"></script>
     <script type="text/javascript" src="logger.js"></script>
     <script type="text/javascript" src="format.js"></script>
+    <script type="text/javascript" src="sha3.js"></script>
     <script type="text/javascript">
 
 const log = document.getElementById('log');
@@ -53,26 +60,30 @@ const logger = new LOGGER({
 logger.writeConsole = function writeConsole(level, module, args) {
   const line = document.createElement('div');
   line.innerHTML = '[' + module + '] ' + FORMAT(args, true);
-  log.appendChild(line);
-  if (log.childElementCount > 6)
+  log.insertBefore(line, log.childNodes[0]);
+  if (log.childElementCount > 1000)
     log.firstElementChild.remove();
 };
 
-const node = new BCOIN.FullNode({
-  hash: true,
-  query: true,
+const node = new HSD.SPVNode({
   prune: true,
-  network: 'main',
+  network: 'testnet',
   memory: false,
   coinCache: 30,
   logConsole: true,
-  workers: true,
-  checkpoints: true,
+  logLevel: 'spam',
+  workers: false,
   createSocket: (port, host) => {
-    return PROXYSOCKET.connect(`wss://browser.c4yt.io`, port, host);
+    const proto = document.location.protocol === 'https:' ? 'wss' : 'ws';
+    const hostname = document.location.host;
+    return PROXYSOCKET.connect(`${proto}://${hostname}`, port, host);
   },
   logger: logger,
-  plugins: [BCOIN.wallet.plugin]
+  plugins: [HSD.wallet.plugin],
+  nodes: [
+    'ak2hy7feae2o5pfzsdzw3cxkxsu3lxypykcl6iphnup4adf2ply6a@138.68.61.31:13038'
+  ],
+  maxOutbound: 1
 });
 
 const {wdb} = node.require('walletdb');
@@ -91,7 +102,7 @@ function getInfo() {
     network: node.network.type,
     chain: {
       height: node.chain.height,
-      tip: node.chain.tip.rhash(),
+      tip: node.chain.tip.hash.toString('hex'),
       progress: node.chain.getProgress()
     },
     pool: {
@@ -135,9 +146,7 @@ async function getWallet() {
   const {key, mnemonic} = wallet.master.toJSON(node.network, true);
   const account = await wallet.getAccount('default');
   const receive = account.receiveAddress();
-  const nested = account.nestedAddress();
   const raddr = receive.toString(node.network);
-  const naddr = nested ? nested.toString(node.network) : null;
 
   let html = '';
 
@@ -166,6 +175,17 @@ async function getWallet() {
 
   const walletTab = document.getElementById('wallet');
   walletTab.innerHTML = html;
+}
+
+async function getDNS() {
+  const name = document.getElementById('name').value;
+  const namehash = HSD.Rules.hashString(name);
+
+  const response = await node.getNameStatus(namehash);
+  const resource = HSD.Resource.fromRaw(response.data);
+
+  const answer = document.getElementById('answer');
+  answer.innerHTML = JSON.stringify(resource, null, 2) + '<hr>' + JSON.stringify(response.getJSON(node.chain.height, 'testnet'), null, 2);
 }
 
 (async () => {

@@ -6,7 +6,9 @@
   "dependencies": {
     "bval": "^0.1.5",
     "bfile": "^0.1.4",
-    "bweb": "^0.1.7"
+    "bweb": "^0.1.7",
+    "binet": "^0.3.4",
+    "bsock": "^0.1.5"
   },
   "devDependencies": {},
   "scripts": {
