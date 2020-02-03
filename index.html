@@ -128,7 +128,7 @@ function getPeers() {
     peer.getName();
 
     peers.push({
-      addr: peer.fullname(),
+      addr: peer.hostname(),
       subver: peer.agent,
       bytessent: peer.socket.bytesWritten,
       bytesrecv: peer.socket.bytesRead
