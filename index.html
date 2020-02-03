@@ -191,7 +191,9 @@ async function getDNS() {
   const namehash = HSD.Rules.hashString(name);
 
   const response = await node.getNameStatus(namehash);
-  const resource = HSD.resource.Resource.fromRaw(response.data);
+  const resource = response.data.length > 0
+    ? HSD.resource.Resource.fromRaw(response.data)
+    : {"Error": "No data for name"};
 
   const answer = document.getElementById('answer');
   answer.innerHTML = JSON.stringify(resource, null, 2) + '<hr>' + JSON.stringify(response.getJSON(node.chain.height, NETWORK), null, 2);
