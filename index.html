@@ -103,11 +103,13 @@ function getInfo() {
     chain: {
       height: node.chain.height,
       tip: node.chain.tip.hash.toString('hex'),
+      treeRoot: node.chain.tip.treeRoot.toString('hex'),
       progress: node.chain.getProgress()
     },
     pool: {
       host: addr.host,
       port: addr.port,
+      identitykey: addr.getKey('base32'),
       agent: node.pool.options.agent,
       services: node.pool.options.services.toString(2),
       outbound: node.pool.peers.outbound,
