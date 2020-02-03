@@ -8,7 +8,7 @@ const WSProxy = require('./wsproxy');
 const index = fs.readFileSync(`${__dirname}/index.html`);
 
 const proxy = new WSProxy({
-  ports: [12038, 13038, 14038, 15038]
+  ports: [12038, 13038, 14038, 15038, 44806, 45806, 46806, 47806]
 });
 
 const server = bweb.server({
@@ -42,6 +42,6 @@ proxy.attach(server.http);
 
 server.open();
 
-function getFile(file){
-  return fs.readFileSync(`${__dirname}/${file}`)
+function getFile(file) {
+  return fs.readFileSync(`${__dirname}/${file}`);
 }
