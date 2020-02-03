@@ -11,11 +11,25 @@ const proxy = new WSProxy({
   ports: [12038, 13038, 14038, 15038, 44806, 45806, 46806, 47806]
 });
 
-const server = bweb.server({
+const redirect = bweb.server({
   host: '0.0.0.0',
-  port: 8080,
+  port: 80,
   sockets: false,
   ssl: false
+});
+
+redirect.use(redirect.router());
+redirect.get('*', (req, res) => {
+  res.redirect('https://easyhandshake.com/');
+});
+
+const server = bweb.server({
+  host: '0.0.0.0',
+  port: 443,
+  sockets: false,
+  ssl: true,
+  keyFile: '/etc/letsencrypt/live/easyhandshake.com/privkey.pem',
+  certFile: '/etc/letsencrypt/live/easyhandshake.com/fullchain.pem'
 });
 
 server.use(server.router());
@@ -40,6 +54,7 @@ server.get('/:file', (req, res) => {
 
 proxy.attach(server.http);
 
+redirect.open();
 server.open();
 
 function getFile(file) {
