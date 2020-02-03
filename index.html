@@ -61,8 +61,8 @@ logger.writeConsole = function writeConsole(level, module, args) {
   const line = document.createElement('div');
   line.innerHTML = '[' + module + '] ' + FORMAT(args, true);
   log.insertBefore(line, log.childNodes[0]);
-  if (log.childElementCount > 1000)
-    log.firstElementChild.remove();
+  if (log.childElementCount > 100)
+    log.lastElementChild.remove();
 };
 
 const node = new HSD.SPVNode({
