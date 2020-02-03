@@ -52,6 +52,8 @@
 
 const log = document.getElementById('log');
 
+const NETWORK = 'regtest';
+
 const logger = new LOGGER({
   level: 'info',
   console: true
@@ -67,7 +69,7 @@ logger.writeConsole = function writeConsole(level, module, args) {
 
 const node = new HSD.SPVNode({
   prune: true,
-  network: 'regtest',
+  network: NETWORK,
   memory: false,
   coinCache: 30,
   logConsole: true,
@@ -80,7 +82,7 @@ const node = new HSD.SPVNode({
   },
   logger: logger,
   plugins: [HSD.wallet.plugin],
-  maxOutbound: 1
+  maxOutbound: NETWORK === 'regtest' ? 1 : 8
 });
 
 const {wdb} = node.require('walletdb');
@@ -189,10 +191,10 @@ async function getDNS() {
   const namehash = HSD.Rules.hashString(name);
 
   const response = await node.getNameStatus(namehash);
-  const resource = HSD.Resource.fromRaw(response.data);
+  const resource = HSD.resource.Resource.fromRaw(response.data);
 
   const answer = document.getElementById('answer');
-  answer.innerHTML = JSON.stringify(resource, null, 2) + '<hr>' + JSON.stringify(response.getJSON(node.chain.height, 'testnet'), null, 2);
+  answer.innerHTML = JSON.stringify(resource, null, 2) + '<hr>' + JSON.stringify(response.getJSON(node.chain.height, NETWORK), null, 2);
 }
 
 (async () => {
