@@ -5,224 +5,75 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
 
-    <title>hsd SPV Node</title>
+    <title>Easyhandshake</title>
   </head>
-  <body>
-    <h4>hsd SPV Node</h4>
-    <ul class="nav nav-tabs" id="mainTabs" role="tablist">
-      <li class="nav-item">
-        <a class="nav-link active" id="log-tab" data-toggle="tab" href="#log" role="tab" aria-controls="log" aria-selected="true">Log</a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link" id="node-tab" data-toggle="tab" href="#node" role="tab" aria-controls="node" aria-selected="false" onclick="getInfo()">Node</a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link" id="peers-tab" data-toggle="tab" href="#peers" role="tab" aria-controls="peers" aria-selected="false" onclick="getPeers()">Peers</a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link" id="wallet-tab" data-toggle="tab" href="#wallet" role="tab" aria-controls="wallet" aria-selected="false" onclick="getWallet()">Wallet</a>
-      </li>
-      <li class="nav-item">
-        <a class="nav-link" id="dns-tab" data-toggle="tab" href="#dns" role="tab" aria-controls="dns" aria-selected="false">DNS</a>
-      </li>
-    </ul>
-    <div class="tab-content" id="myTabContent">
-      <div class="tab-pane fade show active" id="log" role="tabpanel" aria-labelledby="home-tab"></div>
-      <div class="tab-pane fade" id="node" role="tabpanel" aria-labelledby="node-tab" style="white-space: pre"></div>
-      <div class="tab-pane fade" id="peers" role="tabpanel" aria-labelledby="peers-tab" style="white-space: pre"></div>
-      <div class="tab-pane fade" id="wallet" role="tabpanel" aria-labelledby="wallet-tab"></div>
-      <div class="tab-pane fade" id="dns" role="tabpanel" aria-labelledby="dns-tab">
-        <br>
-        Name: <input type="text" style="width:400px" id="name" min="0" value="easyhandshake"><br><br>
-        <button onclick="getDNS()" style="height:50px">Fetch!</button><hr>
-        <span id="answer" style="font-family: monospace; font-size:15px; display: inline-block; width: 100%; white-space: pre">
-      </div>
+  <body style="padding: 10px; color:white; background-color:black">
+    <p>
+    <h4>🤝 easyhandshake.com 🤝</h4>
+    <p>
+    This server provides these services to the Handshake network:<br>
+    <h5>hsd full node</h5>
+    <div style="padding: 10px">
+      This full node is one of the network seed nodes, meaning it's location<br>
+      is hard-coded in the software. It supports up to 128 incoming connections<br>
+      and BIP37 (SPV) connections.<br>
+      <span style="font-family: monospace;">
+        aonetsezqp4m52w4jpfq2gv3dggy2wqfwqtkfjyttgdidbvhgp5as@165.22.151.242
+      </span>
     </div>
-
-    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
-
-    <script type="text/javascript" src="hsd.js"></script>
-    <script type="text/javascript" src="proxysocket.js"></script>
-    <script type="text/javascript" src="logger.js"></script>
-    <script type="text/javascript" src="format.js"></script>
-    <script type="text/javascript" src="sha3.js"></script>
-    <script type="text/javascript">
-
-const log = document.getElementById('log');
-
-const NETWORK = 'main';
-
-const logger = new LOGGER({
-  level: 'info',
-  console: true
-});
-
-logger.writeConsole = function writeConsole(level, module, args) {
-  const line = document.createElement('div');
-  line.innerHTML = '[' + module + '] ' + FORMAT(args, true);
-  log.insertBefore(line, log.childNodes[0]);
-  if (log.childElementCount > 100)
-    log.lastElementChild.remove();
-};
-
-document.getElementById('name').addEventListener("keyup", function(event) {
-  if (event.key === "Enter") {
-    getDNS();
-  }
-});
-
-const node = new HSD.SPVNode({
-  prune: true,
-  network: NETWORK,
-  memory: false,
-  coinCache: 30,
-  logConsole: true,
-  logLevel: 'spam',
-  workers: false,
-  createSocket: (port, host) => {
-    const proto = document.location.protocol === 'https:' ? 'wss' : 'ws';
-    const hostname = document.location.host;
-    return PROXYSOCKET.connect(`${proto}://${hostname}`, port, host);
-  },
-  logger: logger,
-  plugins: [HSD.wallet.plugin],
-  maxOutbound: NETWORK === 'regtest' ? 1 : 8
-});
-
-const {wdb} = node.require('walletdb');
-
-function getInfo() {
-  const totalTX = node.mempool ? node.mempool.map.size : 0;
-  const size = node.mempool ? node.mempool.getSize() : 0;
-
-  let addr = node.pool.hosts.getLocal();
-  if (!addr)
-    addr = node.pool.hosts.address;
-
-  const info =
-  {
-    network: node.network.type,
-    chain: {
-      height: node.chain.height,
-      tip: node.chain.tip.hash.toString('hex'),
-      treeRoot: node.chain.tip.treeRoot.toString('hex'),
-      progress: node.chain.getProgress()
-    },
-    pool: {
-      host: addr.host,
-      port: addr.port,
-      identitykey: addr.getKey('base32'),
-      agent: node.pool.options.agent,
-      services: node.pool.options.services.toString(2),
-      outbound: node.pool.peers.outbound,
-      inbound: node.pool.peers.inbound
-    },
-    mempool: {
-      tx: totalTX,
-      size: size
-    }
-  };
-
-  const nodeTab = document.getElementById('node');
-  nodeTab.innerHTML = JSON.stringify(info, null, 2);
-}
-
-function getPeers() {
-  const peers = [];
-
-  for (let peer = node.pool.peers.head(); peer; peer = peer.next) {
-    peer.getName();
-
-    peers.push({
-      addr: peer.hostname(),
-      subver: peer.agent,
-      bytessent: peer.socket.bytesWritten,
-      bytesrecv: peer.socket.bytesRead
-    });
-  }
-
-  const peersTab = document.getElementById('peers');
-  peersTab.innerHTML = JSON.stringify(peers, null, 2);
-}
-
-async function getWallet() {
-  const wallet = wdb.primary;
-  const {mnemonic} = wallet.master.getJSON(node.network, true);
-  const account = await wallet.getAccount('default');
-  const receive = account.receiveAddress();
-  const raddr = receive.toString(node.network);
-
-  let html = '';
-
-  html += `<p>`
-    + `<span style="color:red">Do not use this wallet on main net!</span><br>`
-    + `<span style="color:red">Web browsers are not secure environments.</span>`
-    + `<p>`;
-
-  html += `Current Address: <br><b>${raddr}</b><br><br>`;
-
-  html += `<a class="btn btn-danger" data-toggle="collapse"`
-    + ` href="#mnphrase" role="button" aria-expanded="false"`
-    + ` aria-controls="mnphrase">`
-    + `Show/Hide Mnemonic`
-    + `</a>`
-    + `<div class="collapse" id="mnphrase">`
-    + `<div class="card card-body">`
-    + `${mnemonic.phrase}`
-    + `</div>`
-    + `</div><br><br>`;
-
-  const balance = await wallet.getBalance();
-
-  html += `Confirmed Balance: <b>${balance.confirmed / 1000000} HNS</b><br>`;
-  html += `Unconfirmed Balance: <b>${balance.unconfirmed / 1000000} HNS</b><br>`;
-
-  const txs = await wallet.getHistory();
-  const det = await wallet.toDetails(txs);
-
-  html += '<br>Transaction History:\n';
-
-  for (const tx of det) {
-    html += `<br><span style="font-family:monospace">${tx.hash.toString('hex')}</span>`;
-  }
-
-  const walletTab = document.getElementById('wallet');
-  walletTab.innerHTML = html;
-}
-
-async function getDNS() {
-  const name = document.getElementById('name').value;
-  const namehash = HSD.Rules.hashString(name);
-
-  const response = await node.getNameStatus(namehash);
-  const resource = response.data.length > 0
-    ? HSD.resource.Resource.fromRaw(response.data)
-    : {"Error": "No data for name"};
-
-  const answer = document.getElementById('answer');
-  answer.innerHTML = JSON.stringify(resource, null, 2) + '<hr>' + JSON.stringify(response.getJSON(node.chain.height, NETWORK), null, 2);
-}
-
-(async () => {
-  await node.open();
-  await node.connect();
-  node.startSync();
-
-  node.on('connect', () => {getInfo()});
-  wdb.on('tx', () => {getWallet()});
-  wdb.on('confirmed', () => {getWallet()});
-
-  node.pool.on('peer connect', () => {getPeers()});
-  node.pool.on('peer close', () => {getPeers()});
-  node.pool.on('peer open', () => {getPeers()});
-  node.pool.on('packet', () => {getPeers()});
-
-})().catch((err) => {
-  throw err;
-});
-
-    </script>
+    <hr>
+    <h5>DNS-over-HTTPS server</h5>
+    <div style="padding: 10px">
+      You can use this server as a trusted resolver, making DNS requests over<br>
+      HTTPS that resolve to the local Handshake full node. You can try it out<br>
+      by configuring Firefox's
+      <a href="https://wiki.mozilla.org/Trusted_Recursive_Resolver">TRR Settings</a>
+      in
+      <span style="font-family: monospace;">about:config</span><br><br>
+      <span style="font-family: monospace;">
+        <table style="">
+          <tr><td>network.trr.mode</td><td>&nbsp;&nbsp;3</td></tr>
+          <tr><td>network.trr.uri</td><td>&nbsp;&nbsp;https://easyhandshake.com:8053/dns-query</td></tr>
+          <tr><td>network.trr.bootstrapAddress</td><td>&nbsp;&nbsp;165.22.151.242</td></tr>
+        </table>
+      </span>
+    </div>
+    <hr>
+    <h5>Handshake DNS seeder</h5>
+      <div style="padding: 10px">
+        easyhandshake.com runs an authoritative nameserver over the subdomain<br>
+        <span style="font-family: monospace;">seed</span>
+        anchored by NS Records in the ICANN DNS system. It returns A and AAAA<br>
+        records generated from the hostlist of the local full node, so bootstrapping<br>
+        nodes can find more peers on the network. You can request those records<br>
+        from any legacy DNS resolver:<br><br>
+        <span style="font-family: monospace;">dig seed.easyhandshake.com</span>
+      </div>
+    <hr>
+    <h5>Web browser SPV node</h5>
+      <div style="padding: 10px">
+        Because hsd is written in JavaScript, it can be repackaged for use in a<br>
+        web browser. The entire (pruned) full node runs in the browser, storing<br>
+        block data in the browser's application storage. Easyhandshake provides<br>
+        a proxy server to connect the webapp to the p2p network. Some explanation<br>
+        is provided in this
+        <a href="https://bcoin.io/guides/browser">bcoin guide</a>.
+        Remember, the web browser is not a secure environment for crypto<br>
+        operations. It's just a proof-of-concept for now, but it does allow<br>
+        web clients to make DNS requests to the live Handshake network.<br><br>
+        <a href="browser.html">Launch the in-browser SPV Handshake node!</a>
+      </div>
+    <hr>
+    <h5>Support</h5>
+      <div style="padding: 10px">
+        This website is maintained by
+        <a href="https://keybase.io/pinheadmz">Matthew Zipkin</a><br>
+        pinheadmz@gmail.com<br>
+        Source code is available
+        <a href="https://github.com/pinheadmz/mobilehsd">on GitHub</a><br>
+        Help keep this site running by contributing:<br>
+        BTC: bc1qh72473t7yuqawf85mztzf23tu6h2vqsg768p8v<br>
+        HNS: hs1qde7jaw6qgzzfu83upn3twvsyhh0zrshg76qe0x
+      </div>
   </body>
 </html>
