@@ -67,7 +67,7 @@ logger.writeConsole = function writeConsole(level, module, args) {
 
 const node = new HSD.SPVNode({
   prune: true,
-  network: 'main',
+  network: 'regtest',
   memory: false,
   coinCache: 30,
   logConsole: true,
@@ -79,11 +79,11 @@ const node = new HSD.SPVNode({
     return PROXYSOCKET.connect(`${proto}://${hostname}`, port, host);
   },
   logger: logger,
-  plugins: [HSD.wallet.plugin]
+  plugins: [HSD.wallet.plugin],
+  maxOutbound: 1
 });
 
 const {wdb} = node.require('walletdb');
-wdb.options.witness = true;
 
 function getInfo() {
   const totalTX = node.mempool ? node.mempool.map.size : 0;
@@ -148,6 +148,11 @@ async function getWallet() {
 
   let html = '';
 
+  html += `<p>`
+    + `<span style="color:red">Do not use this wallet on main net!</span><br>`
+    + `<span style="color:red">Web browsers are not secure environments.</span>`
+    + `<p>`;
+
   html += `Current Address: <br><b>${raddr}</b><br><br>`;
 
   html += `<a class="btn btn-danger" data-toggle="collapse"`
@@ -163,21 +168,17 @@ async function getWallet() {
 
   const balance = await wallet.getBalance();
 
-  html += `Confirmed Balance: <b>${balance.confirmed}</b><br>`;
-  html += `Unconfirmed Balance: <b>${balance.unconfirmed}</b><br>`;
+  html += `Confirmed Balance: <b>${balance.confirmed / 1000000} HNS</b><br>`;
+  html += `Unconfirmed Balance: <b>${balance.unconfirmed / 1000000} HNS</b><br>`;
 
   const txs = await wallet.getHistory();
   const det = await wallet.toDetails(txs);
 
-  // html += 'TXs:\n';
-  // wdiv.innerHTML = html;
+  html += '<br>Transaction History:\n';
 
-  // for (const tx of det) {
-  //   const hash = util.revHex(tx.hash);
-  //   const el = create(
-  //     `<a style="display:block;" href="#${hash}">${hash}</a>`);
-  //   wdiv.appendChild(el);
-  //   setMouseup(el, tx.toJSON());
+  for (const tx of det) {
+    html += `<br><span style="font-family:monospace">${tx.hash.toString('hex')}</span>`;
+  }
 
   const walletTab = document.getElementById('wallet');
   walletTab.innerHTML = html;
@@ -200,6 +201,8 @@ async function getDNS() {
   node.startSync();
 
   node.on('connect', () => {getInfo()});
+  wdb.on('tx', () => {getWallet()});
+  wdb.on('confirmed', () => {getWallet()});
 
   node.pool.on('peer connect', () => {getPeers()});
   node.pool.on('peer close', () => {getPeers()});
