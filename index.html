@@ -141,7 +141,7 @@ function getPeers() {
 
 async function getWallet() {
   const wallet = wdb.primary;
-  const {key, mnemonic} = wallet.master.toJSON(node.network, true);
+  const {mnemonic} = wallet.master.getJSON(node.network, true);
   const account = await wallet.getAccount('default');
   const receive = account.receiveAddress();
   const raddr = receive.toString(node.network);
@@ -150,8 +150,16 @@ async function getWallet() {
 
   html += `Current Address: <br><b>${raddr}</b><br><br>`;
 
-  // html += `Extended Private Key: <b>${key.xprivkey}</b><br>`;
-  // html += `Mnemonic: <b>${mnemonic.phrase}</b><br>`;
+  html += `<a class="btn btn-danger" data-toggle="collapse"`
+    + ` href="#mnphrase" role="button" aria-expanded="false"`
+    + ` aria-controls="mnphrase">`
+    + `Show/Hide Mnemonic`
+    + `</a>`
+    + `<div class="collapse" id="mnphrase">`
+    + `<div class="card card-body">`
+    + `${mnemonic.phrase}`
+    + `</div>`
+    + `</div><br><br>`;
 
   const balance = await wallet.getBalance();
 
