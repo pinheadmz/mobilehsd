@@ -79,11 +79,7 @@ const node = new HSD.SPVNode({
     return PROXYSOCKET.connect(`${proto}://${hostname}`, port, host);
   },
   logger: logger,
-  plugins: [HSD.wallet.plugin],
-  nodes: [
-    'ak2hy7feae2o5pfzsdzw3cxkxsu3lxypykcl6iphnup4adf2ply6a@138.68.61.31:13038'
-  ],
-  maxOutbound: 1
+  plugins: [HSD.wallet.plugin]
 });
 
 const {wdb} = node.require('walletdb');
