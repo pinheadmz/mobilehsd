@@ -8,15 +8,15 @@ hsd is compiled with this command:
 
 ```
 cd <hsd repo root directory>
-bpkg --browser --standalone --plugin [ uglify-es --toplevel ] --name HSD --output <path to this repo>/hsd.js lib/hsd.js
+bpkg --browser --umd --plugin [ uglify-es --toplevel ] --name HSD --output <path to this repo>/hsd.js lib/hsd.js
 ```
 
 ### Installation & usage
 
 ```
 git clone
-npm install
 cd mobilehsd
+npm install
 node server.js
 ```
 
