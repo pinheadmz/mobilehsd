@@ -2,78 +2,81 @@
 <html>
   <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
 
     <title>Easyhandshake</title>
   </head>
-  <body style="padding: 10px; color:white; background-color:black">
-    <p>
-    <h4>🤝 easyhandshake.com 🤝</h4>
-    <p>
-    This server provides these services to the Handshake network:<br>
-    <h5>hsd full node</h5>
-    <div style="padding: 10px">
-      This full node is one of the network seed nodes, meaning it's location<br>
-      is hard-coded in the software. It supports up to 128 incoming connections<br>
-      and BIP37 (SPV) connections.<br>
-      <span style="font-family: monospace;">
-        aonetsezqp4m52w4jpfq2gv3dggy2wqfwqtkfjyttgdidbvhgp5as@165.22.151.242
-      </span>
+  <body style="color:white; background-color:black; width: 100%">
+    <div class="content" style="max-width: 700px; min-width: 300px; margin: auto; overflow: auto">
+      <p>
+      <h4>🤝 easyhandshake.com 🤝</h4>
+      <p>
+      This server provides these services to the Handshake network:<br>
+      <h5>hsd full node</h5>
+      <div style="padding: 10px">
+        This full node is one of the network seed nodes, meaning its location
+        is hard-coded in the software. It supports up to 128 incoming connections
+        and BIP37 (SPV) connections.<br>
+        <span style="font-family: monospace;">
+          aonetsezqp4m52w4jpfq2gv3dggy2wqfwqtkfjyttgdidbvhgp5as@165.22.151.242
+        </span>
+      </div>
+      <hr>
+      <h5>DNS-over-HTTPS server</h5>
+      <div style="padding: 10px">
+        You can use this server as a trusted resolver, making DNS requests over
+        HTTPS that resolve to the local Handshake full node. You can try it out
+        by configuring Firefox's
+        <a href="https://wiki.mozilla.org/Trusted_Recursive_Resolver">TRR Settings</a>
+        in
+        <span style="font-family: monospace;">about:config</span><br><br>
+        <span style="font-family: monospace;">
+          <table style="">
+            <tr><td>network.trr.mode</td><td>&nbsp;&nbsp;3</td></tr>
+            <tr><td>network.trr.uri</td><td>&nbsp;&nbsp;https://easyhandshake.com:8053/dns&#8209;query</td></tr>
+            <tr><td>network.trr.bootstrapAddress</td><td>&nbsp;&nbsp;165.22.151.242</td></tr>
+          </table>
+        </span>
+      </div>
+      <hr>
+      <h5>Handshake DNS seeder</h5>
+        <div style="padding: 10px">
+          easyhandshake.com runs an authoritative nameserver over the subdomain
+          <span style="font-family: monospace;">seed</span>
+          anchored by NS Records in the ICANN DNS system. It returns A and AAAA
+          records generated from the hostlist of the local full node, so bootstrapping
+          nodes can find more peers on the network. You can request those records
+          from any legacy DNS resolver:<br><br>
+          <span style="font-family: monospace;">dig seed.easyhandshake.com</span>
+        </div>
+      <hr>
+      <h5>Web browser SPV node</h5>
+        <div style="padding: 10px">
+          Because hsd is written in JavaScript, it can be repackaged for use in a
+          web browser. The entire (pruned) full node runs in the browser, storing
+          block data in the browser's application storage. Easyhandshake provides
+          a proxy server to connect the webapp to the p2p network. Some explanation
+          is provided in this
+          <a href="https://bcoin.io/guides/browser">bcoin guide</a>.
+          Remember, the web browser is not a secure environment for crypto
+          operations. It's just a proof-of-concept for now, but it does allow
+          web clients to make DNS requests to the live Handshake network.<br><br>
+          <a href="browser.html">Launch the in-browser SPV Handshake node!</a>
+        </div>
+      <hr>
+      <h5>Support</h5>
+        <div style="padding: 10px">
+          This website is maintained by
+          <a href="https://keybase.io/pinheadmz">Matthew Zipkin</a><br>
+          pinheadmz@gmail.com<br>
+          Source code is available
+          <a href="https://github.com/pinheadmz/mobilehsd">on GitHub</a><br>
+          Help keep this site running by contributing:<br>
+          BTC: bc1qh72473t7yuqawf85mztzf23tu6h2vqsg768p8v<br>
+          HNS: hs1qde7jaw6qgzzfu83upn3twvsyhh0zrshg76qe0x
+        </div>
     </div>
-    <hr>
-    <h5>DNS-over-HTTPS server</h5>
-    <div style="padding: 10px">
-      You can use this server as a trusted resolver, making DNS requests over<br>
-      HTTPS that resolve to the local Handshake full node. You can try it out<br>
-      by configuring Firefox's
-      <a href="https://wiki.mozilla.org/Trusted_Recursive_Resolver">TRR Settings</a>
-      in
-      <span style="font-family: monospace;">about:config</span><br><br>
-      <span style="font-family: monospace;">
-        <table style="">
-          <tr><td>network.trr.mode</td><td>&nbsp;&nbsp;3</td></tr>
-          <tr><td>network.trr.uri</td><td>&nbsp;&nbsp;https://easyhandshake.com:8053/dns-query</td></tr>
-          <tr><td>network.trr.bootstrapAddress</td><td>&nbsp;&nbsp;165.22.151.242</td></tr>
-        </table>
-      </span>
-    </div>
-    <hr>
-    <h5>Handshake DNS seeder</h5>
-      <div style="padding: 10px">
-        easyhandshake.com runs an authoritative nameserver over the subdomain<br>
-        <span style="font-family: monospace;">seed</span>
-        anchored by NS Records in the ICANN DNS system. It returns A and AAAA<br>
-        records generated from the hostlist of the local full node, so bootstrapping<br>
-        nodes can find more peers on the network. You can request those records<br>
-        from any legacy DNS resolver:<br><br>
-        <span style="font-family: monospace;">dig seed.easyhandshake.com</span>
-      </div>
-    <hr>
-    <h5>Web browser SPV node</h5>
-      <div style="padding: 10px">
-        Because hsd is written in JavaScript, it can be repackaged for use in a<br>
-        web browser. The entire (pruned) full node runs in the browser, storing<br>
-        block data in the browser's application storage. Easyhandshake provides<br>
-        a proxy server to connect the webapp to the p2p network. Some explanation<br>
-        is provided in this
-        <a href="https://bcoin.io/guides/browser">bcoin guide</a>.
-        Remember, the web browser is not a secure environment for crypto<br>
-        operations. It's just a proof-of-concept for now, but it does allow<br>
-        web clients to make DNS requests to the live Handshake network.<br><br>
-        <a href="browser.html">Launch the in-browser SPV Handshake node!</a>
-      </div>
-    <hr>
-    <h5>Support</h5>
-      <div style="padding: 10px">
-        This website is maintained by
-        <a href="https://keybase.io/pinheadmz">Matthew Zipkin</a><br>
-        pinheadmz@gmail.com<br>
-        Source code is available
-        <a href="https://github.com/pinheadmz/mobilehsd">on GitHub</a><br>
-        Help keep this site running by contributing:<br>
-        BTC: bc1qh72473t7yuqawf85mztzf23tu6h2vqsg768p8v<br>
-        HNS: hs1qde7jaw6qgzzfu83upn3twvsyhh0zrshg76qe0x
-      </div>
+  </div>
   </body>
 </html>
