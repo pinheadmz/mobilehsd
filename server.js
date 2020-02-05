@@ -35,7 +35,11 @@ const server = bweb.server({
 server.use(server.router());
 
 server.on('error', (err) => {
-  console.error(err.stack);
+  console.error('Server error:', err.stack);
+});
+
+redirect.on('error', (err) => {
+  console.error('Redirect error:', err.stack);
 });
 
 server.get('/', (req, res) => {
