@@ -195,14 +195,17 @@ async function getWallet() {
 async function getDNS() {
   const name = document.getElementById('name').value;
   const namehash = HSD.Rules.hashString(name);
-
   const response = await node.getNameStatus(namehash);
-  const resource = response.data.length > 0
-    ? HSD.resource.Resource.fromRaw(response.data)
-    : {"Error": "No data for name"};
-
   const answer = document.getElementById('answer');
-  answer.innerHTML = JSON.stringify(resource, null, 2) + '<hr>' + JSON.stringify(response.getJSON(node.chain.height, NETWORK), null, 2);
+
+  if (response.name.length) {
+    const resource = HSD.resource.Resource.fromRaw(response.data);
+    answer.innerHTML = JSON.stringify(resource, null, 2)
+    + '<hr>'
+    + JSON.stringify(response.getJSON(node.chain.height, NETWORK), null, 2);
+  } else {
+    answer.innerHTML = 'No data for name';
+  }
 }
 
 (async () => {
